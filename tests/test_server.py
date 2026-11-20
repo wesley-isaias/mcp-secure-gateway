@@ -1,5 +1,6 @@
 import pytest
 from fastmcp import Client
+
 from mcp_secure_gateway.server import mcp
 
 
