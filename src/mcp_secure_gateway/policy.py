@@ -1,10 +1,10 @@
 """Pure authorization policy: deny by default, no filesystem or shell access."""
 
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 
 
-class Role(str, Enum):
+class Role(StrEnum):
     VIEWER = "viewer"
     TESTER = "tester"
 
