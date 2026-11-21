@@ -1,6 +1,7 @@
 """Tamper-evident, content-free audit log.
 
-Each tool call produces one JSON line *before* the tool runs::
+Each tool call produces one JSON line *before* the tool runs, and one more
+with the outcome (``succeeded`` or ``failed``) after it returns::
 
     {"seq": 7, "ts": "...", "client": "3f1c...", "tool": "run_checks",
      "decision": "denied", "reason": "action_denied", "prev": "<mac of seq 6>",
@@ -32,7 +33,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 GENESIS = "0" * 64
-DECISIONS = frozenset({"allowed", "denied", "rate_limited"})
+DECISIONS = frozenset({"allowed", "denied", "rate_limited", "succeeded", "failed"})
 _FIELDS = ("seq", "ts", "client", "tool", "decision", "reason", "prev")
 _TOKEN = re.compile(r"^[a-z][a-z0-9_]{0,63}$")
 

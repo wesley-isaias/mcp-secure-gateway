@@ -4,17 +4,17 @@ build-backend = "hatchling.build"
 
 [project]
 name = "mcp-secure-gateway"
-version = "0.2.0"
+version = "0.3.0"
 description = "MCP server with bearer-token auth, deny-by-default policy, rate limiting and a tamper-evident audit log"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = ["fastmcp>=2.12,<3"]
 
 [project.optional-dependencies]
-dev = ["pytest>=8,<10", "pytest-asyncio>=0.24,<2", "ruff>=0.9,<1"]
+dev = ["pytest>=8,<10", "pytest-asyncio>=0.24,<2", "pytest-cov>=5,<8", "ruff>=0.9,<1"]
 
 [project.scripts]
-mcp-secure-gateway = "mcp_secure_gateway.server:main"
+mcp-secure-gateway = "mcp_secure_gateway.cli:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/mcp_secure_gateway"]
@@ -24,6 +24,13 @@ testpaths = ["tests"]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 filterwarnings = ["ignore::authlib.deprecate.AuthlibDeprecationWarning"]
+
+[tool.coverage.run]
+source = ["mcp_secure_gateway"]
+
+[tool.coverage.report]
+fail_under = 88
+show_missing = true
 
 [tool.ruff]
 line-length = 100
