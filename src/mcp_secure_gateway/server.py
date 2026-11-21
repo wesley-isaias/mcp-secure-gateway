@@ -1,8 +1,10 @@
 """Read-only fictional data and deterministic checks exposed through MCP tools.
 
-This educational example does not provide authentication. The role is supplied
-by the caller and MUST NOT be treated as a trusted identity in production.
+This educational example is local-only and does not provide user authentication.
+The role comes from the server process environment, never from tool arguments.
 """
+
+import os
 
 from fastmcp import FastMCP
 
@@ -16,32 +18,33 @@ _FIXTURES = {
 }
 
 
-def _require(role: str, action: str) -> None:
-    decision = authorize(role, action)
+def _require(action: str) -> None:
+    # Process-owned configuration; untrusted MCP clients cannot choose their role.
+    decision = authorize(os.environ.get("MCP_DEMO_ROLE", "viewer"), action)
     if not decision.allowed:
         raise PermissionError(f"Denied: {decision.reason}")
 
 
 @mcp.tool()
-def list_fixtures(role: str = "viewer") -> list[str]:
+def list_fixtures() -> list[str]:
     """List fictional fixture identifiers. No real user data is used."""
-    _require(role, "list_fixtures")
+    _require("list_fixtures")
     return sorted(_FIXTURES)
 
 
 @mcp.tool()
-def get_fixture(fixture_id: str, role: str = "viewer") -> dict[str, str | int]:
+def get_fixture(fixture_id: str) -> dict[str, str | int]:
     """Return a known fictional record; unknown identifiers are rejected."""
-    _require(role, "get_fixture")
+    _require("get_fixture")
     if fixture_id not in _FIXTURES:
         raise ValueError("Unknown fixture ID")
     return dict(_FIXTURES[fixture_id])
 
 
 @mcp.tool()
-def run_checks(role: str = "viewer") -> dict[str, bool]:
+def run_checks() -> dict[str, bool]:
     """Run deterministic in-memory checks; never execute arbitrary commands."""
-    _require(role, "run_checks")
+    _require("run_checks")
     return {
         "fixtures_are_distinct": len(_FIXTURES) == len(set(_FIXTURES)),
         "appointments_nonnegative": all(
