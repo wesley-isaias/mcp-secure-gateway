@@ -17,7 +17,9 @@ ruff check .
 mcp-secure-gateway
 ```
 
-By default the server uses the least-privileged `viewer` role. To demonstrate the `tester` role, start the process with `MCP_DEMO_ROLE=tester` in its environment (e.g., `MCP_DEMO_ROLE=tester mcp-secure-gateway` on Linux/macOS or `$env:MCP_DEMO_ROLE='tester'; mcp-secure-gateway` in PowerShell). Never expose this demo directly to untrusted remote clients.\n\nThe last command starts the MCP server over standard input/output. Use an MCP-compatible client to connect. To test the protocol **without** external services, run the integration tests; they use a real in-process MCP client.
+By default the server uses the least-privileged `viewer` role. To demonstrate the `tester` role, start the process with `MCP_DEMO_ROLE=tester` in its environment (e.g., `MCP_DEMO_ROLE=tester mcp-secure-gateway` on Linux/macOS or `$env:MCP_DEMO_ROLE='tester'; mcp-secure-gateway` in PowerShell). Never expose this demo directly to untrusted remote clients.
+
+The last command starts the MCP server over standard input/output. Use an MCP-compatible client to connect. To test the protocol **without** external services, run the integration tests; they use a real in-process MCP client.
 
 ## Tools
 
