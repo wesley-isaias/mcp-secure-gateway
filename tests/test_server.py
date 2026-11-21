@@ -4,7 +4,8 @@ import pytest
 from fastmcp import Client
 
 from mcp_secure_gateway.audit import verify
-from mcp_secure_gateway.server import Config, ConfigError, build_server, main
+from mcp_secure_gateway.cli import main
+from mcp_secure_gateway.server import Config, ConfigError, build_server
 
 from .conftest import read_audit
 
@@ -17,10 +18,31 @@ def _server(tmp_path=None, audit_key=None, **overrides):
 
 
 async def test_tools_are_discoverable_and_take_no_role():
-    async with Client(_server()) as client:
+    async with Client(_server(local_role="tester")) as client:
         tools = await client.list_tools()
         assert {t.name for t in tools} == {"list_fixtures", "get_fixture", "run_checks"}
         assert all("role" not in t.inputSchema.get("properties", {}) for t in tools)
+
+
+async def test_tool_list_only_shows_what_the_role_may_call():
+    async with Client(_server()) as client:
+        names = {t.name for t in await client.list_tools()}
+        assert names == {"list_fixtures", "get_fixture"}
+
+
+async def test_unknown_role_sees_no_tools():
+    async with Client(_server(local_role="admin")) as client:
+        assert await client.list_tools() == []
+
+
+async def test_successful_call_records_outcome(tmp_path, audit_key):
+    async with Client(_server(tmp_path, audit_key)) as client:
+        await client.call_tool("list_fixtures", {})
+    records = read_audit(tmp_path / "audit.jsonl")
+    assert [(r["decision"], r["reason"]) for r in records] == [
+        ("allowed", "allowed"),
+        ("succeeded", "ok"),
+    ]
 
 
 async def test_viewer_can_read():
@@ -80,6 +102,7 @@ async def test_every_call_is_audited_without_content(tmp_path, audit_key):
     records = read_audit(log)
     assert [(r["tool"], r["decision"]) for r in records] == [
         ("get_fixture", "allowed"),
+        ("get_fixture", "failed"),  # unknown fixture: the tool raised
         ("run_checks", "denied"),
     ]
     assert "SECRET-ARG" not in log.read_text()

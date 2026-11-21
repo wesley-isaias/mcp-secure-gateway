@@ -60,3 +60,10 @@ async def test_audit_identifies_clients_by_pseudonym_only(http_server):
     assert records[-1]["client"] == pseudonym(key, "ci-bot")
     text = log.read_text()
     assert "ci-bot" not in text and TESTER_TOKEN not in text
+
+
+async def test_viewer_token_does_not_see_tester_tools(http_server):
+    url, _, _ = http_server
+    async with Client(url, auth=VIEWER_TOKEN) as client:
+        names = {t.name for t in await client.list_tools()}
+    assert names == {"list_fixtures", "get_fixture"}

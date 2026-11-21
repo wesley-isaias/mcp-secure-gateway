@@ -7,6 +7,10 @@ Order of checks, all before the tool runs:
 2. Rate limit per client.
 3. Deny-by-default policy.
 4. Audit record written and flushed. If that fails, the call is refused.
+
+After the tool returns, a second record stores the outcome. If that write
+fails, the caller gets an error, but the write-ahead record already exists.
+Tool listings are filtered the same way, so callers only see what they may call.
 """
 
 from __future__ import annotations
@@ -80,4 +84,18 @@ class GatewayMiddleware(Middleware):
 
         # Write-ahead: the record exists before the tool has any effect.
         self._record(identity, tool, "allowed", decision.reason)
-        return await call_next(context)
+        try:
+            result = await call_next(context)
+        except Exception:
+            self._record(identity, tool, "failed", "tool_error")
+            raise
+        self._record(identity, tool, "succeeded", "ok")
+        return result
+
+    async def on_list_tools(self, context, call_next):
+        """Only advertise tools the caller is allowed to call."""
+        tools = await call_next(context)
+        identity = self._identity()
+        if identity is None:
+            return []
+        return [tool for tool in tools if authorize(identity.role, tool.name).allowed]
